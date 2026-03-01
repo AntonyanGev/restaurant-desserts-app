@@ -23,32 +23,14 @@ const getCart = async () => {
   }
 };
 
-const createCartItem = async (input) => {
+const confirmOrder = async (items) => {
   try {
-    const { data } = await axios.post(`${JSON_SERVER_URL}/cart`, input);
-    return data;
+    const results = await Promise.all(
+      items.map((item) => axios.post(`${JSON_SERVER_URL}/cart`, item))
+    );
+    return results.map((res) => res.data);
   } catch (error) {
-    console.error("Error creating cart item:", error.message);
-    return null;
-  }
-};
-
-const updateCartItem = async (id, input) => {
-  try {
-    const { data } = await axios.patch(`${JSON_SERVER_URL}/cart/${id}`, input);
-    return data;
-  } catch (error) {
-    console.error("Error updating cart item:", error.message);
-    return null;
-  }
-};
-
-const deleteCartItem = async (id) => {
-  try {
-    const { data } = await axios.delete(`${JSON_SERVER_URL}/cart/${id}`);
-    return data;
-  } catch (error) {
-    console.error("Error deleting cart item:", error.message);
+    console.error("Error confirming order:", error.message);
     return null;
   }
 };
@@ -78,11 +60,7 @@ const root = {
 
   getCart: async () => getCart(),
 
-  createCartItem: async ({ input }) => createCartItem(input),
-
-  updateCartItem: async ({ id, input }) => updateCartItem(id, input),
-
-  deleteCartItem: async ({ id }) => deleteCartItem(id),
+  confirmOrder: async ({ items }) => confirmOrder(items),
 
   deleteCartData: async () => deleteAllCartItems(),
 };

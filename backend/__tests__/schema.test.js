@@ -42,28 +42,15 @@ describe("GraphQL Schema", () => {
   // --- Mutation type checks ---
 
   describe("Mutation types", () => {
-    it("should have createCartItem mutation", () => {
+    it("should have confirmOrder mutation that returns [CartItem]", () => {
       const mutationType = schema.getMutationType();
       const fields = mutationType.getFields();
 
-      expect(fields.createCartItem).toBeDefined();
-      expect(fields.createCartItem.type.toString()).toBe("CartItem");
-    });
-
-    it("should have updateCartItem mutation", () => {
-      const mutationType = schema.getMutationType();
-      const fields = mutationType.getFields();
-
-      expect(fields.updateCartItem).toBeDefined();
-    });
-
-    it("should have deleteCartItem mutation with ID! argument", () => {
-      const mutationType = schema.getMutationType();
-      const fields = mutationType.getFields();
-
-      expect(fields.deleteCartItem).toBeDefined();
-      const idArg = fields.deleteCartItem.args.find((a) => a.name === "id");
-      expect(idArg.type.toString()).toBe("ID!");
+      expect(fields.confirmOrder).toBeDefined();
+      expect(fields.confirmOrder.type.toString()).toBe("[CartItem]");
+      const itemsArg = fields.confirmOrder.args.find((a) => a.name === "items");
+      expect(itemsArg).toBeDefined();
+      expect(itemsArg.type.toString()).toBe("[CartInput]");
     });
 
     it("should have deleteCartData mutation that returns Boolean", () => {

@@ -43,9 +43,7 @@ const schema = buildSchema(`
   }
 
   type Mutation {
-    createCartItem(input: CartInput): CartItem
-    updateCartItem(id: ID, input: CartInput): CartItem
-    deleteCartItem(id: ID!): CartItem
+    confirmOrder(items: [CartInput]): [CartItem]
     deleteCartData: Boolean
   }
 `);

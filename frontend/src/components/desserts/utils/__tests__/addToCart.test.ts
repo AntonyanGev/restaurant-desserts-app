@@ -1,173 +1,141 @@
-import { addToCart } from "../addToCart";
-import type { Dessert, CartItem } from "@/types";
+import { buildCartItems } from "../addToCart";
+import type { Dessert } from "@/types";
 
 // --- Test Data ---
 
-const mockDessert: Dessert = {
-  id: "1",
-  name: "Waffle with Berries",
-  price: "6.50",
-  type: "Waffle",
-  action: "",
-  count: 0,
-  images: {
-    thumbnail: "",
-    mobile: "",
-    tablet: "",
-    desktop: "/images/waffle.jpg",
+const mockDesserts: Dessert[] = [
+  {
+    id: "1",
+    name: "Waffle with Berries",
+    price: "6.50",
+    type: "Waffle",
+    action: "",
+    count: 0,
+    images: {
+      thumbnail: "/images/waffle-thumb.jpg",
+      mobile: "/images/waffle-mobile.jpg",
+      tablet: "/images/waffle-tablet.jpg",
+      desktop: "/images/waffle.jpg",
+    },
   },
-};
+  {
+    id: "2",
+    name: "Crème Brûlée",
+    price: "7.00",
+    type: "Crème Brûlée",
+    action: "",
+    count: 0,
+    images: {
+      thumbnail: "/images/creme-thumb.jpg",
+      mobile: "/images/creme-mobile.jpg",
+      tablet: "/images/creme-tablet.jpg",
+      desktop: "/images/creme.jpg",
+    },
+  },
+  {
+    id: "3",
+    name: "Macaron Mix of Five",
+    price: "8.00",
+    type: "Macaron",
+    action: "",
+    count: 0,
+    images: {
+      thumbnail: "/images/macaron-thumb.jpg",
+      mobile: "/images/macaron-mobile.jpg",
+      tablet: "/images/macaron-tablet.jpg",
+      desktop: "/images/macaron.jpg",
+    },
+  },
+];
 
-const mockExistingCartItem: CartItem = {
-  id: "1",
-  name: "Waffle with Berries",
-  price: "6.50",
-  count: 1,
-  totalPrice: 6.5,
-  image: "/images/waffle.jpg",
-};
+describe("buildCartItems", () => {
+  it("should return an empty array when no counts are set", () => {
+    const result = buildCartItems(mockDesserts, {});
 
-describe("addToCart", () => {
-  let addCartItemMutation: jest.Mock;
-  let updateCartItemMutation: jest.Mock;
-
-  beforeEach(() => {
-    addCartItemMutation = jest.fn().mockResolvedValue({ data: {} });
-    updateCartItemMutation = jest.fn().mockResolvedValue({ data: {} });
+    expect(result).toEqual([]);
   });
 
-  // --- Adding a new item ---
+  it("should return only desserts with count > 0", () => {
+    const counts = { "1": 2, "3": 1 };
 
-  describe("when adding a new item (not in cart)", () => {
-    it("should call addCartItemMutation with the correct variables", async () => {
-      const cartItems: CartItem[] = [];
+    const result = buildCartItems(mockDesserts, counts);
 
-      await addToCart(
-        mockDessert,
-        1,
-        cartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
-
-      expect(addCartItemMutation).toHaveBeenCalledWith({
-        variables: {
-          input: {
-            id: "1",
-            name: "Waffle with Berries",
-            price: "6.50",
-            count: 1,
-            totalPrice: 6.5,
-            image: "/images/waffle.jpg",
-          },
-        },
-      });
-    });
-
-    it("should NOT call updateCartItemMutation", async () => {
-      const cartItems: CartItem[] = [];
-
-      await addToCart(
-        mockDessert,
-        1,
-        cartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
-
-      expect(updateCartItemMutation).not.toHaveBeenCalled();
-    });
-
-    it("should calculate totalPrice correctly", async () => {
-      const cartItems: CartItem[] = [];
-
-      await addToCart(
-        mockDessert,
-        3,
-        cartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
-
-      const callArgs = addCartItemMutation.mock.calls[0][0];
-      expect(callArgs.variables.input.totalPrice).toBe(19.5); // 3 * 6.50
-      expect(callArgs.variables.input.count).toBe(3);
-    });
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe("Waffle with Berries");
+    expect(result[1].name).toBe("Macaron Mix of Five");
   });
 
-  // --- Updating an existing item ---
+  it("should exclude items with count of 0", () => {
+    const counts = { "1": 0, "2": 1 };
 
-  describe("when updating an existing item (already in cart)", () => {
-    it("should call updateCartItemMutation with the correct variables", async () => {
-      const cartItems: CartItem[] = [mockExistingCartItem];
+    const result = buildCartItems(mockDesserts, counts);
 
-      await addToCart(
-        mockDessert,
-        2,
-        cartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Crème Brûlée");
+  });
 
-      expect(updateCartItemMutation).toHaveBeenCalledWith({
-        variables: {
-          id: "1",
-          input: {
-            count: 2,
-            totalPrice: 13.0, // 2 * 6.50
-          },
-        },
-      });
-    });
+  it("should calculate totalPrice correctly", () => {
+    const counts = { "1": 3 };
 
-    it("should NOT call addCartItemMutation", async () => {
-      const cartItems: CartItem[] = [mockExistingCartItem];
+    const result = buildCartItems(mockDesserts, counts);
 
-      await addToCart(
-        mockDessert,
-        2,
-        cartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
+    expect(result[0].totalPrice).toBe(19.5); // 3 * 6.50
+    expect(result[0].count).toBe(3);
+  });
 
-      expect(addCartItemMutation).not.toHaveBeenCalled();
+  it("should use the thumbnail image for cart items", () => {
+    const counts = { "1": 1 };
+
+    const result = buildCartItems(mockDesserts, counts);
+
+    expect(result[0].image).toBe("/images/waffle-thumb.jpg");
+  });
+
+  it("should handle multiple items with correct totals", () => {
+    const counts = { "1": 2, "2": 1, "3": 4 };
+
+    const result = buildCartItems(mockDesserts, counts);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].totalPrice).toBe(13.0); // 2 * 6.50
+    expect(result[1].totalPrice).toBe(7.0); // 1 * 7.00
+    expect(result[2].totalPrice).toBe(32.0); // 4 * 8.00
+  });
+
+  it("should return correct cart item shape", () => {
+    const counts = { "1": 1 };
+
+    const result = buildCartItems(mockDesserts, counts);
+
+    expect(result[0]).toEqual({
+      id: "1",
+      name: "Waffle with Berries",
+      price: "6.50",
+      count: 1,
+      totalPrice: 6.5,
+      image: "/images/waffle-thumb.jpg",
     });
   });
 
-  // --- Edge cases ---
-
-  describe("edge cases", () => {
-    it("should handle price as a string and parse it correctly", async () => {
-      const dessertWithStringPrice: Dessert = {
-        ...mockDessert,
+  it("should handle price as a string and parse it correctly", () => {
+    const desserts: Dessert[] = [
+      {
+        ...mockDesserts[0],
         price: "12.99",
-      };
+      },
+    ];
+    const counts = { "1": 2 };
 
-      await addToCart(
-        dessertWithStringPrice,
-        2,
-        [],
-        addCartItemMutation,
-        updateCartItemMutation
-      );
+    const result = buildCartItems(desserts, counts);
 
-      const callArgs = addCartItemMutation.mock.calls[0][0];
-      expect(callArgs.variables.input.totalPrice).toBeCloseTo(25.98);
-    });
+    expect(result[0].totalPrice).toBeCloseTo(25.98);
+  });
 
-    it("should handle count of 1", async () => {
-      await addToCart(
-        mockDessert,
-        1,
-        [],
-        addCartItemMutation,
-        updateCartItemMutation
-      );
+  it("should return an empty array when desserts list is empty", () => {
+    const counts = { "1": 1 };
 
-      const callArgs = addCartItemMutation.mock.calls[0][0];
-      expect(callArgs.variables.input.totalPrice).toBe(6.5);
-      expect(callArgs.variables.input.count).toBe(1);
-    });
+    const result = buildCartItems([], counts);
+
+    expect(result).toEqual([]);
   });
 });

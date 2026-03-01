@@ -24,33 +24,41 @@ import {
 } from "./styles";
 
 import OrderConfirmationModal from "../../OrderConfirmation/index";
-import { DELETE_CART_ITEM } from "@/app/Service/mutation/cart";
-import { GET_CART } from "@/app/Service/query/cart";
+import { CONFIRM_ORDER } from "@/app/Service/mutation/cart";
 import type { CartItem } from "@/types";
 
 interface ActiveCardProps {
   cartList: CartItem[];
+  onRemoveItem: (id: string) => void;
   onNewOrder: () => void;
 }
 
-const ActiveCard: React.FC<ActiveCardProps> = ({ cartList, onNewOrder }) => {
+const ActiveCard: React.FC<ActiveCardProps> = ({ cartList, onRemoveItem, onNewOrder }) => {
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
-  const [deleteDessert] = useMutation(DELETE_CART_ITEM, {
-    refetchQueries: [{ query: GET_CART }],
-  });
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDessert({ variables: { id } });
-    } catch (error) {
-      console.error("Error deleting cart item:", error);
-    }
-  };
+  const [confirmOrder] = useMutation(CONFIRM_ORDER);
 
   const totalPrice = cartList.reduce(
     (acc, item) => acc + item.totalPrice,
     0
   );
+
+  const handleConfirmOrder = async () => {
+    try {
+      const items = cartList.map(({ id, name, price, count, totalPrice, image }) => ({
+        id,
+        name,
+        price,
+        count,
+        totalPrice,
+        image,
+      }));
+
+      await confirmOrder({ variables: { items } });
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Error confirming order:", error);
+    }
+  };
 
   const handleNewOrder = () => {
     setModalOpen(false);
@@ -73,7 +81,7 @@ const ActiveCard: React.FC<ActiveCardProps> = ({ cartList, onNewOrder }) => {
                 <Image
                   src="/images/icon-remove-item.svg"
                   alt="Remove item"
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => onRemoveItem(item.id)}
                   style={{ cursor: "pointer" }}
                 />
               </Box>
@@ -95,7 +103,7 @@ const ActiveCard: React.FC<ActiveCardProps> = ({ cartList, onNewOrder }) => {
         This is a <CarbonNeutralText>carbon neutral</CarbonNeutralText> delivery
       </Neutral>
 
-      <Confirm onClick={() => setModalOpen(true)}>Confirm Order</Confirm>
+      <Confirm onClick={handleConfirmOrder}>Confirm Order</Confirm>
 
       {isModalOpen && (
         <OrderConfirmationModal

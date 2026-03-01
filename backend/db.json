@@ -118,6 +118,15 @@
       }
     }
   ],
-  "cart": [],
+  "cart": [
+    {
+      "id": "1",
+      "name": "Waffle with Berries",
+      "price": "6.50",
+      "count": 4,
+      "totalPrice": 26,
+      "image": "/images/image-waffle-desktop.jpg"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }

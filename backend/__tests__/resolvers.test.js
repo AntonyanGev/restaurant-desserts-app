@@ -112,81 +112,50 @@ describe("getCart", () => {
   });
 });
 
-// --- createCartItem ---
+// --- confirmOrder ---
 
-describe("createCartItem", () => {
-  const newItem = {
-    id: "3",
-    name: "Macaron",
-    price: "8.00",
-    count: 1,
-    totalPrice: 8.0,
-  };
+describe("confirmOrder", () => {
+  const orderItems = [
+    { id: "1", name: "Waffle with Berries", price: "6.50", count: 2, totalPrice: 13.0, image: "/images/waffle.jpg" },
+    { id: "2", name: "Crème Brûlée", price: "7.00", count: 1, totalPrice: 7.0, image: "/images/creme.jpg" },
+  ];
 
-  it("should create a new cart item and return it", async () => {
-    axios.post.mockResolvedValue({ data: newItem });
+  it("should save all cart items and return them", async () => {
+    axios.post
+      .mockResolvedValueOnce({ data: orderItems[0] })
+      .mockResolvedValueOnce({ data: orderItems[1] });
 
-    const result = await root.createCartItem({ input: newItem });
+    const result = await root.confirmOrder({ items: orderItems });
 
-    expect(axios.post).toHaveBeenCalledWith("http://localhost:5001/cart", newItem);
-    expect(result).toEqual(newItem);
+    expect(axios.post).toHaveBeenCalledTimes(2);
+    expect(axios.post).toHaveBeenCalledWith("http://localhost:5001/cart", orderItems[0]);
+    expect(axios.post).toHaveBeenCalledWith("http://localhost:5001/cart", orderItems[1]);
+    expect(result).toEqual(orderItems);
   });
 
-  it("should return null when creation fails", async () => {
+  it("should return null when saving fails", async () => {
     axios.post.mockRejectedValue(new Error("Server error"));
 
-    const result = await root.createCartItem({ input: newItem });
+    const result = await root.confirmOrder({ items: orderItems });
 
     expect(result).toBeNull();
   });
-});
 
-// --- updateCartItem ---
+  it("should handle a single item order", async () => {
+    const singleItem = [orderItems[0]];
+    axios.post.mockResolvedValue({ data: singleItem[0] });
 
-describe("updateCartItem", () => {
-  const updateData = { count: 3, totalPrice: 19.5 };
+    const result = await root.confirmOrder({ items: singleItem });
 
-  it("should update a cart item and return the updated data", async () => {
-    const updatedItem = { ...mockCartItems[0], ...updateData };
-    axios.patch.mockResolvedValue({ data: updatedItem });
-
-    const result = await root.updateCartItem({ id: "1", input: updateData });
-
-    expect(axios.patch).toHaveBeenCalledWith(
-      "http://localhost:5001/cart/1",
-      updateData
-    );
-    expect(result.count).toBe(3);
-    expect(result.totalPrice).toBe(19.5);
+    expect(axios.post).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(singleItem);
   });
 
-  it("should return null when the update fails", async () => {
-    axios.patch.mockRejectedValue(new Error("Not found"));
+  it("should handle an empty items array", async () => {
+    const result = await root.confirmOrder({ items: [] });
 
-    const result = await root.updateCartItem({ id: "999", input: updateData });
-
-    expect(result).toBeNull();
-  });
-});
-
-// --- deleteCartItem ---
-
-describe("deleteCartItem", () => {
-  it("should delete a cart item and return the response", async () => {
-    axios.delete.mockResolvedValue({ data: mockCartItems[0] });
-
-    const result = await root.deleteCartItem({ id: "1" });
-
-    expect(axios.delete).toHaveBeenCalledWith("http://localhost:5001/cart/1");
-    expect(result).toEqual(mockCartItems[0]);
-  });
-
-  it("should return null when deletion fails", async () => {
-    axios.delete.mockRejectedValue(new Error("Not found"));
-
-    const result = await root.deleteCartItem({ id: "999" });
-
-    expect(result).toBeNull();
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 });
 

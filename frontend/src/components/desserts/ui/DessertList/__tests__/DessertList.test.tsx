@@ -108,7 +108,7 @@ describe("DessertList", () => {
     const addButtons = screen.getAllByText("Add to Cart");
     fireEvent.click(addButtons[0]);
 
-    expect(defaultProps.incrementCount).toHaveBeenCalledWith("1", mockDesserts[0]);
+    expect(defaultProps.incrementCount).toHaveBeenCalledWith("1");
   });
 
   it("should use desktop image on wide screens", () => {

@@ -9,8 +9,8 @@ import type { Dessert, Images } from "@/types";
 interface DessertListProps {
   desserts: Dessert[];
   counts: Record<string, number>;
-  incrementCount: (id: string, dessert: Dessert) => void;
-  decrementCount: (id: string, dessert: Dessert) => void;
+  incrementCount: (id: string) => void;
+  decrementCount: (id: string) => void;
 }
 
 const DessertList: React.FC<DessertListProps> = ({
@@ -48,12 +48,12 @@ const DessertList: React.FC<DessertListProps> = ({
           {counts[dessert.id] > 0 ? (
             <Counter
               count={counts[dessert.id]}
-              incrementCount={() => incrementCount(dessert.id, dessert)}
-              decrementCount={() => decrementCount(dessert.id, dessert)}
+              incrementCount={() => incrementCount(dessert.id)}
+              decrementCount={() => decrementCount(dessert.id)}
             />
           ) : (
             <AddToCart
-              onAddToCart={() => incrementCount(dessert.id, dessert)}
+              onAddToCart={() => incrementCount(dessert.id)}
             />
           )}
         </Card>
