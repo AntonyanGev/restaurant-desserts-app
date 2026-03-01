@@ -28,17 +28,10 @@ const mockExistingCartItem: CartItem = {
 };
 
 describe("addToCart", () => {
-  let setCartItems: jest.Mock;
   let addCartItemMutation: jest.Mock;
   let updateCartItemMutation: jest.Mock;
 
   beforeEach(() => {
-    setCartItems = jest.fn((updater: unknown) => {
-      // Simulate React setState with updater function
-      if (typeof updater === "function") {
-        (updater as (prev: CartItem[]) => CartItem[])([]);
-      }
-    });
     addCartItemMutation = jest.fn().mockResolvedValue({ data: {} });
     updateCartItemMutation = jest.fn().mockResolvedValue({ data: {} });
   });
@@ -53,7 +46,6 @@ describe("addToCart", () => {
         mockDessert,
         1,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
@@ -72,21 +64,6 @@ describe("addToCart", () => {
       });
     });
 
-    it("should call setCartItems to add the new item", async () => {
-      const cartItems: CartItem[] = [];
-
-      await addToCart(
-        mockDessert,
-        1,
-        cartItems,
-        setCartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
-
-      expect(setCartItems).toHaveBeenCalled();
-    });
-
     it("should NOT call updateCartItemMutation", async () => {
       const cartItems: CartItem[] = [];
 
@@ -94,7 +71,6 @@ describe("addToCart", () => {
         mockDessert,
         1,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
@@ -109,7 +85,6 @@ describe("addToCart", () => {
         mockDessert,
         3,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
@@ -130,7 +105,6 @@ describe("addToCart", () => {
         mockDessert,
         2,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
@@ -153,27 +127,11 @@ describe("addToCart", () => {
         mockDessert,
         2,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
 
       expect(addCartItemMutation).not.toHaveBeenCalled();
-    });
-
-    it("should call setCartItems to update the existing item", async () => {
-      const cartItems: CartItem[] = [mockExistingCartItem];
-
-      await addToCart(
-        mockDessert,
-        2,
-        cartItems,
-        setCartItems,
-        addCartItemMutation,
-        updateCartItemMutation
-      );
-
-      expect(setCartItems).toHaveBeenCalled();
     });
   });
 
@@ -190,7 +148,6 @@ describe("addToCart", () => {
         dessertWithStringPrice,
         2,
         [],
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
@@ -204,7 +161,6 @@ describe("addToCart", () => {
         mockDessert,
         1,
         [],
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );

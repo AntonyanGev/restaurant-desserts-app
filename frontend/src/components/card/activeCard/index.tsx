@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@apollo/client";
+import React, { useState } from "react";
+import { useMutation } from "@apollo/client";
 
 import {
   Details,
@@ -28,44 +28,40 @@ import { DELETE_CART_ITEM } from "@/app/Service/mutation/cart";
 import { GET_CART } from "@/app/Service/query/cart";
 import type { CartItem } from "@/types";
 
-const ActiveCard: React.FC = () => {
-  const { data, loading } = useQuery(GET_CART);
-  const [cartList, setCartList] = useState<CartItem[]>([]);
-  const [isModalOpen, setModalOpen] = useState<boolean>(false);
-  const [deleteDessert] = useMutation(DELETE_CART_ITEM);
+interface ActiveCardProps {
+  cartList: CartItem[];
+  onNewOrder: () => void;
+}
 
-  useEffect(() => {
-    if (!loading && data) {
-      setCartList(data.getCart);
-    }
-  }, [data, loading]);
+const ActiveCard: React.FC<ActiveCardProps> = ({ cartList, onNewOrder }) => {
+  const [isModalOpen, setModalOpen] = useState<boolean>(false);
+  const [deleteDessert] = useMutation(DELETE_CART_ITEM, {
+    refetchQueries: [{ query: GET_CART }],
+  });
 
   const handleDelete = async (id: string) => {
     try {
-      const { data: deleteData } = await deleteDessert({ variables: { id } });
-      if (deleteData) {
-        setCartList((prev) => prev.filter((item) => item.id !== id));
-      }
+      await deleteDessert({ variables: { id } });
     } catch (error) {
       console.error("Error deleting cart item:", error);
     }
   };
 
-  const totalPrice = (cartList || []).reduce(
+  const totalPrice = cartList.reduce(
     (acc, item) => acc + item.totalPrice,
     0
   );
 
   const handleNewOrder = () => {
     setModalOpen(false);
-    window.location.reload();
+    onNewOrder();
   };
 
   return (
     <Order>
-      <YourCard>Your Cart ({cartList?.length})</YourCard>
+      <YourCard>Your Cart ({cartList.length})</YourCard>
 
-      {cartList?.map((item) => (
+      {cartList.map((item) => (
         <CartList key={item.id}>
           <Details>
             <DetailWrapper>

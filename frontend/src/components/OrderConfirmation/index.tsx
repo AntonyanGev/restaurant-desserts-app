@@ -26,6 +26,7 @@ import {
   CloseIcon,
 } from "./styles";
 import { useMutation } from "@apollo/client";
+import { GET_CART } from "@/app/Service/query/cart";
 import type { CartItem } from "@/types";
 
 interface OrderConfirmationModalProps {
@@ -39,7 +40,9 @@ const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   totalPrice,
   onNewOrder,
 }) => {
-  const [deleteCartData] = useMutation(DELETE_CART_DATA);
+  const [deleteCartData] = useMutation(DELETE_CART_DATA, {
+    refetchQueries: [{ query: GET_CART }],
+  });
 
   const handleDeleteAll = async () => {
     try {

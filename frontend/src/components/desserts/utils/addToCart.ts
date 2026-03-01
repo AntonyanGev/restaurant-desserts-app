@@ -1,12 +1,10 @@
 import type { Dessert, CartItem } from "@/types";
 import type { MutationFunction } from "@apollo/client";
-import type { Dispatch, SetStateAction } from "react";
 
 export const addToCart = async (
   dessert: Dessert,
   count: number,
   cartItems: CartItem[],
-  setCartItems: Dispatch<SetStateAction<CartItem[]>>,
   addCartItemMutation: MutationFunction,
   updateCartItemMutation: MutationFunction
 ): Promise<void> => {
@@ -15,7 +13,7 @@ export const addToCart = async (
   );
 
   if (existingItemIndex > -1) {
-    const updatedItem: CartItem = {
+    const updatedItem = {
       ...cartItems[existingItemIndex],
       count,
       totalPrice: count * parseFloat(dessert.price),
@@ -30,14 +28,8 @@ export const addToCart = async (
         },
       },
     });
-
-    setCartItems((prevCart) => {
-      const newCart = [...prevCart];
-      newCart[existingItemIndex] = updatedItem;
-      return newCart;
-    });
   } else {
-    const newItem: CartItem = {
+    const newItem = {
       id: dessert.id,
       name: dessert.name,
       price: dessert.price,
@@ -49,7 +41,5 @@ export const addToCart = async (
     await addCartItemMutation({
       variables: { input: newItem },
     });
-
-    setCartItems((prevCart) => [...prevCart, newItem]);
   }
 };

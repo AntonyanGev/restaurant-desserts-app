@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 
 import { GET_ALL_DESSERTS } from "@/app/Service/query/desserts";
@@ -12,28 +12,22 @@ import { Main, H1, Section, Wrapper, Loader } from "./styles";
 import InactiveCard from "../card/InactiveCard/index";
 import ActiveCard from "../card/activeCard";
 import { addToCart } from "./utils/addToCart";
-import type { Dessert, CartItem } from "@/types";
+import type { Dessert } from "@/types";
 
 export default function Desserts() {
   const { data, loading } = useQuery(GET_ALL_DESSERTS);
-  const { data: cartData, loading: cartLoading, refetch } = useQuery(GET_CART);
-  const [desserts, setDesserts] = useState<Dessert[]>([]);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { data: cartData, loading: cartLoading } = useQuery(GET_CART);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [addCartItemMutation] = useMutation(CREATE_CART_ITEM);
-  const [updateCartItemMutation] = useMutation(UPDATE_CART_ITEM);
 
-  useEffect(() => {
-    if (!loading && data) {
-      setDesserts(data.getAllDesserts);
-    }
-  }, [data, loading]);
+  const [addCartItemMutation] = useMutation(CREATE_CART_ITEM, {
+    refetchQueries: [{ query: GET_CART }],
+  });
+  const [updateCartItemMutation] = useMutation(UPDATE_CART_ITEM, {
+    refetchQueries: [{ query: GET_CART }],
+  });
 
-  useEffect(() => {
-    if (!cartLoading && cartData) {
-      setCartItems(cartData.getCart);
-    }
-  }, [cartData, cartLoading]);
+  const desserts = data?.getAllDesserts ?? [];
+  const cartItems = cartData?.getCart ?? [];
 
   const incrementCount = async (id: string, dessert: Dessert) => {
     const newCount = (counts[id] || 0) + 1;
@@ -43,12 +37,9 @@ export default function Desserts() {
       dessert,
       newCount,
       cartItems,
-      setCartItems,
       addCartItemMutation,
       updateCartItemMutation
     );
-
-    refetch();
   };
 
   const decrementCount = async (id: string, dessert: Dessert) => {
@@ -60,20 +51,21 @@ export default function Desserts() {
         dessert,
         newCount,
         cartItems,
-        setCartItems,
         addCartItemMutation,
         updateCartItemMutation
       );
     }
+  };
 
-    refetch();
+  const handleNewOrder = () => {
+    setCounts({});
   };
 
   return (
     <Section>
       <Wrapper>
         <H1>Desserts</H1>
-        {loading ? (
+        {loading || cartLoading ? (
           <Loader>Loading...</Loader>
         ) : (
           <Main>
@@ -86,7 +78,11 @@ export default function Desserts() {
           </Main>
         )}
       </Wrapper>
-      {cartItems.length > 0 ? <ActiveCard /> : <InactiveCard />}
+      {cartItems.length > 0 ? (
+        <ActiveCard cartList={cartItems} onNewOrder={handleNewOrder} />
+      ) : (
+        <InactiveCard />
+      )}
     </Section>
   );
 }
